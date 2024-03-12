@@ -1,6 +1,6 @@
 from sys import argv, exit
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QCheckBox, QPushButton, QFrame, QSlider, QHBoxLayout, QMessageBox, QLineEdit, QTableWidgetItem, QTableWidget, QInputDialog
-from PyQt5.QtGui import QFont, QPalette, QColor, QDesktopServices
+from PyQt5.QtGui import QFont, QPalette, QColor, QDesktopServices, QIcon
 from PyQt5.QtCore import Qt, QUrl
 from random import choice
 from string import ascii_uppercase, ascii_lowercase, digits, punctuation
@@ -146,6 +146,7 @@ class PasswordGenerator(QWidget):
             super().__init__()
             # Set window properties
             self.setWindowTitle("Password Generator 1.4")
+            self.setWindowIcon(QIcon("icons/main.ico"))
             self.setAutoFillBackground(True)
             self.generated_password = None
             def notify(self):
@@ -353,67 +354,74 @@ class PasswordGenerator(QWidget):
         
 class ShowPassword(QWidget):
     def __init__(self, PasswordGenerator):
-        self.password_generator = PasswordGenerator
         super().__init__()
-        self.setWindowTitle("Show Passwords")
-        self.setAutoFillBackground(True)
-        # Create the table widget and set the column count
-        self.table = QTableWidget()
-        self.table.setColumnCount(4)
-        self.table.setHorizontalHeaderLabels(["URL", "Email", "Password", "INFO"])
-        self.table.setColumnWidth(0, 210)
-        self.table.setColumnWidth(1, 200)
-        self.table.setColumnWidth(2, 170)
-        self.table.setColumnWidth(3, 200)
-        self.table.cellClicked.connect(self.cell_clicked)
-        # Apply the updated stylesheet with a dark theme and improved spacing
-        self.table.setStyleSheet("""
-            QTableWidget {
-                background-color: #333;  /* Dark background for the entire table */
-                color: #FFF;  /* White text for better readability on dark background */
-                font-size: 15px;
-                border: none;  /* Remove border for a cleaner look */
-            }
-            QHeaderView::section {
-                background-color: #555;  /* Slightly lighter shade for headers */
-                padding: 12px;
-                color: #FFF;
-                font-size: 18px;
-            }
-            QTableCornerButton::section {
-                background-color: #555;  /* Match header background */
-            }
-            QTableWidgetItem {
-                padding: 20px 10px;  /* Increase vertical padding to 20px and horizontal to 10px */
-                color: #FFF;  /* White text for items */
-                font-size: 15px;
-            }
-            /* Alternating row colors for better readability */
-            QTableWidget::item:nth-child(odd) {
-                background-color: #444;  /* Darker shade for odd rows */
-            }
-            QTableWidget::item:nth-child(even) {
-                background-color: #333;  /* Dark background for even rows */
-            }
-            /* Increase line spacing */
-            QTableWidget::item {
-                line-height: 1.6;  /* Increase line height for more space between lines */
-            }
-        """)
-        
-        # Create a layout
-        layout = QVBoxLayout()
-        # Add the table to the layout
-        layout.addWidget(self.table)
-        # Set the layout on the widget
-        self.setLayout(layout)
+        # Set the icon for the master password dialog
+        self.setWindowIcon(QIcon("icons/master.ico"))
+        master_password, ok = QInputDialog.getText(self, 'Master Password', '<b>Enter The Master Password </b>🔑')
+        if ok and self.check_master_password(master_password):  # Replace with your master password checking logic
+            self.password_generator = PasswordGenerator
+            self.setWindowTitle("Show Passwords")
+            # Set a different icon if the master password is correct
+            self.setWindowIcon(QIcon("icons/data.ico"))
+            self.setAutoFillBackground(True)
+            # Create the table widget and set the column count
+            self.table = QTableWidget()
+            self.table.setColumnCount(4)
+            self.table.setHorizontalHeaderLabels(["URL 🔗", "Email 📧", "Password 🔑", "INFO 📃"])
+            self.table.setColumnWidth(0, 260)
+            self.table.setColumnWidth(1, 200)
+            self.table.setColumnWidth(2, 170)
+            self.table.setColumnWidth(3, 200)
+            self.table.cellClicked.connect(self.cell_clicked)
+            # Apply the updated stylesheet with a dark theme and improved spacing
+            self.table.setStyleSheet("""
+                QTableWidget {
+                    background-color: #333;  /* Dark background for the entire table */
+                    color: #FFF;  /* White text for better readability on dark background */
+                    font-size: 15px;
+                    border: none;  /* Remove border for a cleaner look */
+                }
+                QHeaderView::section {
+                    background-color: #555;  /* Slightly lighter shade for headers */
+                    padding: 12px;
+                    color: #FFF;
+                    font-size: 18px;
+                }
+                QTableCornerButton::section {
+                    background-color: #555;  /* Match header background */
+                }
+                QTableWidgetItem {
+                    padding: 20px 10px;  /* Increase vertical padding to 20px and horizontal to 10px */
+                    color: #FFF;  /* White text for items */
+                    font-size: 15px;
+                }
+                /* Alternating row colors for better readability */
+                QTableWidget::item:nth-child(odd) {
+                    background-color: #444;  /* Darker shade for odd rows */
+                }
+                QTableWidget::item:nth-child(even) {
+                    background-color: #333;  /* Dark background for even rows */
+                }
+                /* Increase line spacing */
+                QTableWidget::item {
+                    line-height: 1.6;  /* Increase line height for more space between lines */
+                }
+            """)
+            
+            # Create a layout
+            layout = QVBoxLayout()
+            # Add the table to the layout
+            layout.addWidget(self.table)
+            # Set the layout on the widget
+            self.setLayout(layout)
 
-        # Call the method to view data
-        self.view_data()
+            # Call the method to view data
+            self.view_data()
 
-        # Set a fixed size for the widget
-        self.setFixedSize(900, 500)  # Adjust the size as needed
-        
+            # Set a fixed size for the widget
+            self.setFixedSize(900, 500)  # Adjust the size as needed
+        else:
+            QMessageBox.warning(self, 'Error', 'Incorrect master password.')
         
     def view_data(self):
         # Connect to the database
@@ -448,14 +456,10 @@ class ShowPassword(QWidget):
     def cell_clicked(self, row, column):
         item = self.table.item(row, column)
         if column == 2:  # Password column
-            master_password, ok = QInputDialog.getText(self, 'Master Password', 'Enter the master password:')
-            if ok and self.check_master_password(master_password):  # Replace with your master password checking logic
                 real_password = self.get_real_password(item.text())  # Replace with your logic to get the real password
                 # Copy the password to clipboard and Show the real password
                 copy(real_password)
                 QMessageBox.information(self, 'Copied', f'Password : {real_password}\nPassword has been copied to clipboard.')
-            else:
-                QMessageBox.warning(self, 'Error', 'Incorrect master password.')
         elif column == 0:  # URL column
             opening_link = QMessageBox.question(self, "LINK", "Wanna Open it?")
             if opening_link == QMessageBox.Ok:
@@ -485,6 +489,7 @@ class SaveWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Save Password")
+        self.setWindowIcon(QIcon("icons/save.ico"))
         self.setAutoFillBackground(True)
 
         # Create QLineEdit objects
@@ -531,13 +536,12 @@ class SaveWindow(QWidget):
 
         # Check if the URL is valid
         try:
-            if not url.startswith('www.'):
+            if not url.startswith('www.') and not url.startswith('https://'):
                 url = 'www.' + url
-            if not url.endswith('.com'):
-                url = url + '.com'
-            url = 'https://' + url if not url.startswith('https://') else url
+            if not url.startswith('https://'):
+                url = 'https://' + url
             result = urlparse(url)
-            if not all([result.scheme, result.netloc]) or not URL(url):
+            if not all([result.scheme, result.netloc]):
                 QMessageBox.warning(self, 'Error', 'The URL is not valid. Please enter a valid URL ❌')
                 return
         except ValueError:
@@ -570,6 +574,7 @@ class SaveWindow(QWidget):
         # Clear the input fields
         self.url_input.clear()
         QMessageBox.information(self, "Saved", "Password Successfully Saved ✅")
+
 
 
 if __name__ == "__main__":
